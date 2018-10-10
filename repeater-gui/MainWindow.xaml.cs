@@ -10,6 +10,8 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using repeater_gui.Properties;
 using Neo.SmartContract;
+using System.Linq;
+using Microsoft.AspNetCore.Server.Kestrel.Internal.System.Collections.Sequences;
 
 namespace repeater_gui
 {
@@ -22,7 +24,7 @@ namespace repeater_gui
         Thread threadInit;
         public bool direction = true;
         static int amount = 10;
-
+        int counter = 0;
 
         private Account accountA;
         private Account accountB;
@@ -194,50 +196,77 @@ namespace repeater_gui
 
         private void Transact()
         {
-            Account[] accountPair = new Account[2];
-            while (true) {
+            WalletAccount bank = accountA.Wallet.GetAccounts().First();
+            WalletAccount[] consumers = accountB.Wallet.GetAccounts().ToArray();
+            int patch = 100;
+                
+            while(true)
+            {
                 if (threadInit.ThreadState == ThreadState.Stopped)
                 { //if (amount < 100 || amount > 1000) amount = RandomNumber();
-                    if (direction)
+
+                    Console.WriteLine($"Tx turn {counter}.");
+                    ArrayList<WalletAccount> randomConsumers = new ArrayList<WalletAccount>();
+
+                    for (int i = 0; i < patch; i++)
                     {
-                        accountPair[0] = accountA;
-                        accountPair[1] = accountB;
-                        TransactAction(accountPair);
-                        Invert(direction);
+                        randomConsumers.Add(consumers[RandomNumber(counter)]);
                     }
-                    else
+                                        
+                    foreach (WalletAccount consumer in randomConsumers)
                     {
-                        accountPair[0] = accountB;
-                        accountPair[1] = accountA;
-                        TransactAction(accountPair);
-                        Invert(direction);
+                        TransactAction(consumer, accountA, amount);
                     }
+
+                    TransactBackAction(bank, accountB, patch * amount);
+                    counter++;
                 }
             }
         }
 
         
-        private void TransactAction(Account[] accountPair)
+        private void TransactAction(WalletAccount target, Account account, int value)
         {
-            Program.CurrentWallet = accountPair[0].Wallet;
+            Program.CurrentWallet = account.Wallet;
             int curWalletAmount = int.Parse(Program.CurrentWallet.GetAvailable(Blockchain.GoverningToken.Hash).ToString());
             
-            TransactionOutput[] outputs = new TransactionOutput[2];
+            TransactionOutput[] outputs = new TransactionOutput[1];
+
             outputs[0] = new TransactionOutput
             {
                 AssetId = Blockchain.GoverningToken.Hash,
-                ScriptHash = Wallet.ToScriptHash(accountPair[0].Address),
-                Value = Fixed8.Parse(amount.ToString())
+                ScriptHash = Wallet.ToScriptHash(target.Address),
+                Value = Fixed8.Parse(value.ToString())
             };
 
-            outputs[1] = new TransactionOutput
+            if (curWalletAmount > value)
             {
-                AssetId = Blockchain.GoverningToken.Hash,
-                ScriptHash = Wallet.ToScriptHash(accountPair[1].Address),
-                Value = Fixed8.Parse(amount.ToString())
-            };
+                TransactProcess(outputs, Program.CurrentWallet);
+            }
+            else
+            {
+                Thread.Sleep(16000);
+            }
+        }
 
-            if (curWalletAmount > amount)
+        private void TransactBackAction(WalletAccount target, Account account, int value)
+        {
+            Program.CurrentWallet = account.Wallet;
+            int curWalletAmount = int.Parse(Program.CurrentWallet.GetAvailable(Blockchain.GoverningToken.Hash).ToString());
+
+            TransactionOutput[] outputs = new TransactionOutput[value / amount];
+
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                outputs[i] = new TransactionOutput
+                {
+                    AssetId = Blockchain.GoverningToken.Hash,
+                    ScriptHash = Wallet.ToScriptHash(target.Address),
+                    Value = Fixed8.Parse(amount.ToString())
+                };
+            }
+
+            if (curWalletAmount > value)
             {
                 TransactProcess(outputs, Program.CurrentWallet);
             }
@@ -280,7 +309,7 @@ namespace repeater_gui
                 tx.Scripts = context.GetScripts();
                 Program.CurrentWallet.ApplyTransaction(tx);
                 Program.LocalNode.Relay(tx);
-                string result = "交易已发送，这是交易编号(TXID)：" + tx.Hash.ToString();
+                string result = "Turn "+ counter + ", 交易已发送, 这是交易编号(TXID)：" + tx.Hash.ToString();
 
                 this.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() =>
                 {
@@ -296,15 +325,14 @@ namespace repeater_gui
                         }
                     }
                 }));
-                Thread.Sleep(200);
+                Thread.Sleep(300);
             }
         }
 
-        //返回1到10之间的数
-        public static int RandomNumber()
+        public static int RandomNumber(int max)
         {
             Random rd = new Random();
-            return rd.Next(1, 10);
+            return rd.Next(0, max);
         }
 
         public void Invert(bool signal)

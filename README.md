@@ -1,6 +1,7 @@
-# neo-tx-repeater(zh-cn)
+# neo-random-repeater(zh-cn)
 
-这是一个在两个账户之间产生大量UTXO数据的C# WinForm程序，这些数据用于Neo私链上的测试。
+这是一个在两个钱包之间产生大量UTXO数据的C# WinForm程序，这些数据用于Neo私链上的测试。由于在neo-cli中加入的批次处理为一次最多50签名、5000交易，因此尝试构建1:100的地址：UTXO数据模型，同时刻意形成UTXO在地址间分布的倾斜，最终形成类似下图分布的数据集。
+![image](https://i.loli.net/2018/10/10/5bbdbe1711ae1.png)
 
 ## 用法
 
@@ -28,7 +29,7 @@ AaCLAHfkBuGHXQG5oqNKg9H2yudSyd3yvy, 对应WIF为KwPRvCPeoe2y2CvqFypAzv5nVKjziQPS
 
 仅测试了json钱包的可用性，SQLite钱包也许能用。
 
-# neo-tx-repeater(en)
+# neo-random-repeater(en)
 
 This is a program to produce duplicated transactions between 2 wallets to create UTXO data for testing usage.
 
