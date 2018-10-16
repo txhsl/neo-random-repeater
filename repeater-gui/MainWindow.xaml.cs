@@ -24,7 +24,7 @@ namespace repeater_gui
         Thread threadInit;
         public bool direction = true;
         static int amount = 10;
-        int counter = 0;
+        int counter = 1030;
 
         private Account accountA;
         private Account accountB;
@@ -183,7 +183,7 @@ namespace repeater_gui
                         Value = Fixed8.Parse(amount.ToString())
                     };
                 }
-                if (curWalletAmount > amount)
+                if (curWalletAmount >= amount)
                 {
                     TransactProcess(outputs, Program.CurrentWallet);
                 }
@@ -218,7 +218,8 @@ namespace repeater_gui
                         TransactAction(consumer, accountA, amount);
                     }
 
-                    TransactBackAction(bank, accountB, patch * amount);
+                    if (int.Parse(accountB.Wallet.GetAvailable(Blockchain.GoverningToken.Hash).ToString()) > 0)
+                        TransactBackAction(bank, accountB, int.Parse(accountB.Wallet.GetAvailable(Blockchain.GoverningToken.Hash).ToString()));
                     counter++;
                 }
             }
@@ -239,7 +240,7 @@ namespace repeater_gui
                 Value = Fixed8.Parse(value.ToString())
             };
 
-            if (curWalletAmount > value)
+            if (curWalletAmount >= value)
             {
                 TransactProcess(outputs, Program.CurrentWallet);
             }
@@ -266,7 +267,7 @@ namespace repeater_gui
                 };
             }
 
-            if (curWalletAmount > value)
+            if (curWalletAmount >= value)
             {
                 TransactProcess(outputs, Program.CurrentWallet);
             }
