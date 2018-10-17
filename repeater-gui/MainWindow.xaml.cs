@@ -11,7 +11,7 @@ using System.Windows.Threading;
 using repeater_gui.Properties;
 using Neo.SmartContract;
 using System.Linq;
-using Microsoft.AspNetCore.Server.Kestrel.Internal.System.Collections.Sequences;
+using System.Collections.Generic;
 
 namespace repeater_gui
 {
@@ -206,7 +206,7 @@ namespace repeater_gui
                 { //if (amount < 100 || amount > 1000) amount = RandomNumber();
 
                     Console.WriteLine($"Tx turn {counter}.");
-                    ArrayList<WalletAccount> randomConsumers = new ArrayList<WalletAccount>();
+                    List<WalletAccount> randomConsumers = new List<WalletAccount>();
 
                     for (int i = 0; i < patch; i++)
                     {
